@@ -69,14 +69,14 @@ The platform incorporates multiple AI capabilities:
 - Role-based access management.
 - Secure payment gateway integration.
 
-## 👥 Project Team
+## 👥 Group Project – PawStay AI
 
-**Group Project – PawStay AI**
+### Team Members
 
-- Aritra Kartick Das
-- Varad Milind Gotkhindikar
-- Parshwa Sukumar Honale
-- Dharmnath Santosh Kadam
+1. **Aritra Kartick Das** – [@AritraDas007-tech](https://github.com/AritraDas007-tech)
+2. **Varad Milind Gotkhindikar** – [@Varad-7611](https://github.com/Varad-7611)
+3. **Parshwa Sukumar Honale** – [@parshwahonale10](https://github.com/parshwahonale10)
+4. **Dharmnath Santosh Kadam** – [@Dharmanathsk04](https://github.com/Dharmanathsk04)
 
 ## 🎯 Project Objective
 
