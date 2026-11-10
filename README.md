@@ -73,10 +73,38 @@ The platform incorporates multiple AI capabilities:
 
 ### Team Members
 
-1. **Aritra Kartick Das** – [@AritraDas007-tech](https://github.com/AritraDas007-tech)
-2. **Varad Milind Gotkhindikar** – [@Varad-7611](https://github.com/Varad-7611)
-3. **Parshwa Sukumar Honale** – [@parshwahonale10](https://github.com/parshwahonale10)
-4. **Dharamanath Santosh Kadam** – [@Dharmanathsk04](https://github.com/Dharmanathsk04)
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/AritraDas007-tech">
+        <img src="https://github.com/AritraDas007-tech.png" width="100px;" alt="Aritra Kartick Das"/>
+        <br />
+        <b>Aritra Kartick Das</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Varad-7611">
+        <img src="https://github.com/Varad-7611.png" width="100px;" alt="Varad Milind Gotkhindikar"/>
+        <br />
+        <b>Varad Milind Gotkhindikar</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/parshwahonale10">
+        <img src="https://github.com/parshwahonale10.png" width="100px;" alt="Parshwa Sukumar Honale"/>
+        <br />
+        <b>Parshwa Sukumar Honale</b>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Dharmanathsk04">
+        <img src="https://github.com/Dharmanathsk04.png" width="100px;" alt="Dharmnath Santosh Kadam"/>
+        <br />
+        <b>Dharmnath Santosh Kadam</b>
+      </a>
+    </td>
+  </tr>
+</table>
 
 ## 🎯 Project Objective
 
