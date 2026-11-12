@@ -106,6 +106,15 @@ The platform incorporates multiple AI capabilities:
   </tr>
 </table>
 
+
+## 📄 Research Publication
+
+Our research paper based on **PawStay AI – Intelligent Pet Home Stay & Caregiver Platform** is published on Zenodo.
+
+- **Research Paper:** [View Published Research Paper](https://zenodo.org/records/23656502)
+- **Platform:** Zenodo
+- **Publication Record:** [23656502](https://zenodo.org/records/23656502)
+
 ## 🎯 Project Objective
 
 To develop an intelligent and scalable pet-care ecosystem that simplifies caregiver discovery, pet-care management, communication, and service booking through Artificial Intelligence, location-based technologies, and microservices architecture.
