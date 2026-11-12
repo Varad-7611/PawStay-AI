@@ -100,7 +100,7 @@ The platform incorporates multiple AI capabilities:
       <a href="https://github.com/Dharmanathsk04">
         <img src="https://github.com/Dharmanathsk04.png" width="100px;" alt="Dharmnath Santosh Kadam"/>
         <br />
-        <b>Dharmnath Santosh Kadam</b>
+        <b>Dharmanath Santosh Kadam</b>
       </a>
     </td>
   </tr>
