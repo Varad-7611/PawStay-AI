@@ -1,21 +1,43 @@
-MIT License
 
-Copyright (c) 2026 Celestial Coders
+Copyright (c) 2026 Varad Gotkhindikar
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ALL RIGHTS RESERVED.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This software, including its source code, design,
+documentation, architecture, and associated materials,
+is the intellectual property of Varad Gotkhindikar,
+except for third-party materials and contributions
+owned by their respective rights holders.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+AUTHORIZED TEAM ACCESS:
+
+The following GitHub accounts are authorized to
+contribute to the official Pawstay AI repository:
+
+- Varad Milind Gotkhindikar
+- Dharmanath Santosh Kadam
+- Aritra K Das 
+- Parshwa Sukumar Honale 
+
+Authorized team members may modify the project and
+submit pull requests within the official Pawstay AI
+repository, subject to the project owner's approval.
+
+This permission does NOT grant permission to:
+
+1. Republish this project in another repository.
+2. Create and distribute unauthorized copies.
+3. Use the project's source code in another project.
+4. Commercially distribute the project without permission.
+5. Claim ownership of work belonging to another author.
+6. Redistribute or sublicense this software.
+
+Only Varad-7611, acting as the repository owner,
+is authorized to approve and merge pull requests
+into the official main branch.
+
+All other rights are reserved by their respective
+copyright owners.
+
+For licensing or permission requests, contact
+Varad Gotkhindikar.
