@@ -69,7 +69,7 @@ The platform incorporates multiple AI capabilities:
 - Role-based access management.
 - Secure payment gateway integration.
 
-## 👥 Group Project – PawStay AI
+## 👥 Group Project - PawStay AI
 
 ### Team Members
 
