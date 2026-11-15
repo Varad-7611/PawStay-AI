@@ -1,0 +1,45 @@
+
+name: Flutter iOS Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-ios:
+    name: Build Flutter iOS App
+    runs-on: macos-15
+
+    steps:
+      # 1. Download source code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Install Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # 3. Check Flutter installation
+      - name: Flutter Doctor
+        run: flutter doctor -v
+
+      # 4. Install project dependencies
+      - name: Install Dependencies
+        run: flutter pub get
+
+      # 5. Build iOS application
+      - name: Build iOS App
+        run: flutter build ios --release --no-codesign
+
+      # 6. Upload generated application
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Flutter-iOS-Build
+          path: build/ios/iphoneos/Runner.app
+          if-no-files-found: error
