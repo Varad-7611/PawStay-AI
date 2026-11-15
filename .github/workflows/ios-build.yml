@@ -1,45 +1,137 @@
 
-name: Flutter iOS Build
+name: PawStay AI - iOS Build
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
 jobs:
   build-ios:
-    name: Build Flutter iOS App
+    name: Build PawStay iOS
     runs-on: macos-15
 
     steps:
-      # 1. Download source code
+
+      # 1. Checkout GitHub repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Install Flutter
+      # 2. Setup Flutter
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-      # 3. Check Flutter installation
-      - name: Flutter Doctor
-        run: flutter doctor -v
+      # 3. Check development environment
+      - name: Check Flutter and Xcode
+        run: |
+          flutter --version
+          flutter doctor -v
+          xcodebuild -version
+          pod --version
 
-      # 4. Install project dependencies
-      - name: Install Dependencies
-        run: flutter pub get
+      # 4. Configure environment variables
+      - name: Configure Environment
+        env:
+          PAWSTAY_ENV: ${{ secrets.PAWSTAY_ENV }}
+        run: |
+          if [ -n "$PAWSTAY_ENV" ]; then
+            printf '%s' "$PAWSTAY_ENV" > .env
+            echo ".env configured from GitHub Secrets"
+          elif [ -f ".env" ]; then
+            echo "Using existing .env file"
+          else
+            echo "::warning::No .env file found"
+          fi
 
-      # 5. Build iOS application
-      - name: Build iOS App
-        run: flutter build ios --release --no-codesign
+      # 5. Install Flutter dependencies
+      - name: Install Flutter Dependencies
+        run: |
+          flutter pub get
 
-      # 6. Upload generated application
-      - name: Upload iOS Artifact
+      # 6. Configure iOS deployment target
+      - name: Configure iOS Deployment Target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          podfile = Path("ios/Podfile")
+          project = Path("ios/Runner.xcodeproj/project.pbxproj")
+
+          if not podfile.exists():
+              raise SystemExit("ERROR: ios/Podfile is missing")
+
+          if not project.exists():
+              raise SystemExit("ERROR: Xcode project is missing")
+
+          # Set CocoaPods platform to iOS 15.5
+          content = podfile.read_text()
+
+          if re.search(r"^\s*platform\s+:ios,", content, re.M):
+              content = re.sub(
+                  r"^\s*platform\s+:ios,\s*['\"][^'\"]+['\"]",
+                  "platform :ios, '15.5'",
+                  content,
+                  count=1,
+                  flags=re.M
+              )
+          else:
+              content = "platform :ios, '15.5'\n" + content
+
+          podfile.write_text(content)
+
+          # Set Xcode deployment targets to iOS 15.5
+          content = project.read_text()
+
+          content, count = re.subn(
+              r"IPHONEOS_DEPLOYMENT_TARGET = [^;]+;",
+              "IPHONEOS_DEPLOYMENT_TARGET = 15.5;",
+              content
+          )
+
+          if count == 0:
+              raise SystemExit("ERROR: No Xcode deployment target found")
+
+          project.write_text(content)
+
+          print("iOS deployment target configured: 15.5")
+          PY
+
+      # 7. Verify iOS configuration
+      - name: Verify iOS Configuration
+        run: |
+          grep "platform :ios" ios/Podfile
+          grep "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+
+      # 8. Build iOS application without Apple signing
+      - name: Build PawStay iOS
+        run: |
+          flutter build ios --release --no-codesign
+
+      # 9. Verify generated application
+      - name: Verify iOS Build
+        run: |
+          if [ -d "build/ios/iphoneos/Runner.app" ]; then
+            echo "PawStay iOS build generated successfully"
+            ls -lah build/ios/iphoneos/
+          else
+            echo "ERROR: Runner.app not generated"
+            exit 1
+          fi
+
+      # 10. Upload iOS application
+      - name: Upload PawStay iOS Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Flutter-iOS-Build
+          name: PawStay-iOS-App
           path: build/ios/iphoneos/Runner.app
           if-no-files-found: error
+          retention-days: 7
