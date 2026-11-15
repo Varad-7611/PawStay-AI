@@ -1,5 +1,5 @@
 
-name: PawStay AI - iOS Build
+name: PawStay AI - Unsigned iOS Build
 
 on:
   push:
@@ -13,12 +13,12 @@ permissions:
 
 jobs:
   build-ios:
-    name: Build PawStay iOS
+    name: Build PawStay iOS Without Signing
     runs-on: macos-15
 
     steps:
 
-      # 1. Checkout GitHub repository
+      # 1. Checkout source code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -29,26 +29,26 @@ jobs:
           channel: stable
           cache: true
 
-      # 3. Check development environment
-      - name: Check Flutter and Xcode
+      # 3. Verify build environment
+      - name: Check Build Environment
         run: |
           flutter --version
           flutter doctor -v
           xcodebuild -version
           pod --version
 
-      # 4. Configure environment variables
+      # 4. Configure environment
       - name: Configure Environment
         env:
           PAWSTAY_ENV: ${{ secrets.PAWSTAY_ENV }}
         run: |
           if [ -n "$PAWSTAY_ENV" ]; then
             printf '%s' "$PAWSTAY_ENV" > .env
-            echo ".env configured from GitHub Secrets"
+            echo "Environment configured"
           elif [ -f ".env" ]; then
-            echo "Using existing .env file"
+            echo "Using existing environment file"
           else
-            echo "::warning::No .env file found"
+            echo "No .env file found"
           fi
 
       # 5. Install Flutter dependencies
@@ -56,7 +56,7 @@ jobs:
         run: |
           flutter pub get
 
-      # 6. Configure iOS deployment target
+      # 6. Set iOS deployment target
       - name: Configure iOS Deployment Target
         run: |
           python3 - <<'PY'
@@ -67,12 +67,11 @@ jobs:
           project = Path("ios/Runner.xcodeproj/project.pbxproj")
 
           if not podfile.exists():
-              raise SystemExit("ERROR: ios/Podfile is missing")
+              raise SystemExit("Podfile is missing")
 
           if not project.exists():
-              raise SystemExit("ERROR: Xcode project is missing")
+              raise SystemExit("Xcode project is missing")
 
-          # Set CocoaPods platform to iOS 15.5
           content = podfile.read_text()
 
           if re.search(r"^\s*platform\s+:ios,", content, re.M):
@@ -88,7 +87,6 @@ jobs:
 
           podfile.write_text(content)
 
-          # Set Xcode deployment targets to iOS 15.5
           content = project.read_text()
 
           content, count = re.subn(
@@ -98,40 +96,72 @@ jobs:
           )
 
           if count == 0:
-              raise SystemExit("ERROR: No Xcode deployment target found")
+              raise SystemExit("Deployment target not found")
 
           project.write_text(content)
 
-          print("iOS deployment target configured: 15.5")
+          print("iOS deployment target: 15.5")
           PY
 
-      # 7. Verify iOS configuration
-      - name: Verify iOS Configuration
+      # 7. Generate Flutter iOS configuration
+      - name: Generate iOS Configuration
         run: |
-          grep "platform :ios" ios/Podfile
-          grep "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+          flutter build ios --config-only --release --no-codesign
 
-      # 8. Build iOS application without Apple signing
-      - name: Build PawStay iOS
+      # 8. Install CocoaPods
+      - name: Install CocoaPods
         run: |
-          flutter build ios --release --no-codesign
+          cd ios
+          pod install
 
-      # 9. Verify generated application
-      - name: Verify iOS Build
+      # 9. Build directly using Xcode
+      # Explicitly disable every code-signing requirement
+      - name: Build iOS Using Xcode Without Signing
         run: |
-          if [ -d "build/ios/iphoneos/Runner.app" ]; then
-            echo "PawStay iOS build generated successfully"
-            ls -lah build/ios/iphoneos/
+          set -o pipefail
+
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/ios/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            build 2>&1 | tee xcode-build.log
+
+      # 10. Verify generated application
+      - name: Verify iOS Application
+        run: |
+          APP_PATH="build/ios/DerivedData/Build/Products/Release-iphoneos/Runner.app"
+
+          if [ -d "$APP_PATH" ]; then
+            echo "PawStay iOS build successful!"
+            ls -lah "$APP_PATH"
           else
-            echo "ERROR: Runner.app not generated"
+            echo "Runner.app not found"
             exit 1
           fi
 
-      # 10. Upload iOS application
-      - name: Upload PawStay iOS Artifact
+      # 11. Upload application
+      - name: Upload PawStay iOS App
         uses: actions/upload-artifact@v4
         with:
           name: PawStay-iOS-App
-          path: build/ios/iphoneos/Runner.app
+          path: build/ios/DerivedData/Build/Products/Release-iphoneos/Runner.app
           if-no-files-found: error
+          retention-days: 7
+
+      # 12. Upload diagnostic logs
+      - name: Upload Xcode Build Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: PawStay-iOS-Build-Logs
+          path: xcode-build.log
+          if-no-files-found: warn
           retention-days: 7
