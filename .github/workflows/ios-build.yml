@@ -1,10 +1,13 @@
 
-name: PawStay AI - Unsigned iOS Build
+name: PawStay AI - Automatic iOS IPA Build
 
 on:
   push:
     branches:
       - main
+    paths:
+      - '**/api_config.dart'
+      - '.github/workflows/ios-build.yml'
 
   workflow_dispatch:
 
@@ -13,12 +16,12 @@ permissions:
 
 jobs:
   build-ios:
-    name: Build PawStay iOS Without Signing
+    name: Build PawStay iOS IPA
     runs-on: macos-15
 
     steps:
 
-      # 1. Checkout source code
+      # 1. Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -29,7 +32,7 @@ jobs:
           channel: stable
           cache: true
 
-      # 3. Verify build environment
+      # 3. Check environment
       - name: Check Build Environment
         run: |
           flutter --version
@@ -37,7 +40,48 @@ jobs:
           xcodebuild -version
           pod --version
 
-      # 4. Configure environment
+      # 4. Extract IP address from api_config.dart
+      - name: Extract PawStay Backend IP
+        id: api
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import ipaddress
+          import os
+
+          files = list(Path("lib").rglob("api_config.dart"))
+
+          if len(files) != 1:
+              raise SystemExit(
+                  f"Expected exactly one api_config.dart in lib/, found {len(files)}"
+              )
+
+          content = files[0].read_text()
+
+          match = re.search(
+              r"deviceIp\s*=\s*String\.fromEnvironment\s*\("
+              r"[\s\S]*?defaultValue\s*:\s*['\"]([^'\"]+)['\"]",
+              content
+          )
+
+          if not match:
+              raise SystemExit("Could not find deviceIp defaultValue")
+
+          host = match.group(1).strip()
+
+          try:
+              ipaddress.ip_address(host)
+          except ValueError:
+              raise SystemExit(f"Invalid IP address: {host}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write(f"host={host}\n")
+
+          print(f"PawStay backend IP: {host}")
+          PY
+
+      # 5. Configure environment
       - name: Configure Environment
         env:
           PAWSTAY_ENV: ${{ secrets.PAWSTAY_ENV }}
@@ -45,18 +89,17 @@ jobs:
           if [ -n "$PAWSTAY_ENV" ]; then
             printf '%s' "$PAWSTAY_ENV" > .env
             echo "Environment configured"
-          elif [ -f ".env" ]; then
-            echo "Using existing environment file"
           else
-            echo "No .env file found"
+            touch .env
+            echo "Created empty .env"
           fi
 
-      # 5. Install Flutter dependencies
+      # 6. Install Flutter dependencies
       - name: Install Flutter Dependencies
         run: |
           flutter pub get
 
-      # 6. Set iOS deployment target
+      # 7. Set iOS deployment target
       - name: Configure iOS Deployment Target
         run: |
           python3 - <<'PY'
@@ -100,68 +143,72 @@ jobs:
 
           project.write_text(content)
 
-          print("iOS deployment target: 15.5")
+          print("iOS deployment target configured: 15.5")
           PY
-
-      # 7. Generate Flutter iOS configuration
-      - name: Generate iOS Configuration
-        run: |
-          flutter build ios --config-only --release --no-codesign
 
       # 8. Install CocoaPods
       - name: Install CocoaPods
         run: |
           cd ios
           pod install
+          cd ..
 
-      # 9. Build directly using Xcode
-      # Explicitly disable every code-signing requirement
-      - name: Build iOS Using Xcode Without Signing
+      # 9. Build iOS with IP extracted from api_config.dart
+      - name: Build PawStay iOS
+        env:
+          API_HOST: ${{ steps.api.outputs.host }}
         run: |
-          set -o pipefail
+          echo "Building PawStay with backend IP: $API_HOST"
 
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
-            -derivedDataPath build/ios/DerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_IDENTITY="" \
-            DEVELOPMENT_TEAM="" \
-            PROVISIONING_PROFILE_SPECIFIER="" \
-            build 2>&1 | tee xcode-build.log
+          flutter build ios \
+            --release \
+            --no-codesign \
+            --dart-define=PAWSTAY_API_HOST="$API_HOST"
 
-      # 10. Verify generated application
+      # 10. Verify iOS application
       - name: Verify iOS Application
         run: |
-          APP_PATH="build/ios/DerivedData/Build/Products/Release-iphoneos/Runner.app"
+          APP_PATH="build/ios/iphoneos/Runner.app"
 
-          if [ -d "$APP_PATH" ]; then
-            echo "PawStay iOS build successful!"
-            ls -lah "$APP_PATH"
-          else
+          if [ ! -d "$APP_PATH" ]; then
             echo "Runner.app not found"
             exit 1
           fi
 
-      # 11. Upload application
+          echo "PawStay iOS build successful!"
+          ls -lah "$APP_PATH"
+
+      # 11. Package IPA
+      - name: Create PawStay IPA
+        run: |
+          APP_PATH="build/ios/iphoneos/Runner.app"
+
+          mkdir -p build/ios/ipa/Payload
+
+          cp -R "$APP_PATH" build/ios/ipa/Payload/
+
+          cd build/ios/ipa
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            Payload PawStay.ipa
+
+          echo "IPA generated successfully"
+          ls -lh PawStay.ipa
+
+      # 12. Upload IPA
+      - name: Upload PawStay IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: PawStay-iOS-IPA
+          path: build/ios/ipa/PawStay.ipa
+          if-no-files-found: error
+          retention-days: 7
+
+      # 13. Upload original app bundle
       - name: Upload PawStay iOS App
         uses: actions/upload-artifact@v4
         with:
           name: PawStay-iOS-App
-          path: build/ios/DerivedData/Build/Products/Release-iphoneos/Runner.app
+          path: build/ios/iphoneos/Runner.app
           if-no-files-found: error
-          retention-days: 7
-
-      # 12. Upload diagnostic logs
-      - name: Upload Xcode Build Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: PawStay-iOS-Build-Logs
-          path: xcode-build.log
-          if-no-files-found: warn
           retention-days: 7
