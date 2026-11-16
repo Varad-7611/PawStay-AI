@@ -204,11 +204,42 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-      # 13. Upload original app bundle
-      - name: Upload PawStay iOS App
+
+      # 13. Build PawStay for iOS Simulator
+      - name: Build iOS Simulator App
+        env:
+          API_HOST: ${{ steps.api.outputs.host }}
+        run: |
+          echo "Building simulator app with backend IP: $API_HOST"
+
+          flutter build ios \
+            --debug \
+            --simulator \
+            --dart-define=PAWSTAY_API_HOST="$API_HOST"
+
+      # 14. Package Simulator App for Appetize
+      - name: Package iOS Simulator App
+        run: |
+          APP_PATH="build/ios/iphonesimulator/Runner.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Simulator Runner.app not found"
+            exit 1
+          fi
+
+          cd build/ios/iphonesimulator
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            Runner.app PawStay-iOS-Simulator.zip
+
+          echo "Simulator package created!"
+          ls -lh PawStay-iOS-Simulator.zip
+
+      # 15. Upload Simulator Build
+      - name: Upload PawStay Simulator Build
         uses: actions/upload-artifact@v4
         with:
-          name: PawStay-iOS-App
-          path: build/ios/iphoneos/Runner.app
+          name: PawStay-iOS-Simulator
+          path: build/ios/iphonesimulator/PawStay-iOS-Simulator.zip
           if-no-files-found: error
           retention-days: 7
